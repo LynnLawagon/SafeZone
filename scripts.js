@@ -1,74 +1,43 @@
 'use strict';
 
-const DAVAO_COORDS = [7.1907, 125.4553]; // Davao City center
-const FACILITY_MIN_ZOOM = 10;                       
-const MAX_MARKERS = 1500;
+const DAVAO_CENTER = [7.0731, 125.6128];
 const STORAGE_KEY = 'safezone_incidents_v2';
 const HAZARDHUNTER_URL = 'https://hazardhunter.georisk.gov.ph/map';
 const OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const $ = (selector) => document.querySelector(selector);
 
-const HAZARD_SERVICES = {
-  flood: {
-    name: 'Flood susceptibility',
-    source: 'DENR-MGB via GeoRisk PH',
-    base: 'https://ulap-hazards.georisk.gov.ph/arcgis/rest/services/MGBPublic/Flood/MapServer',
-    layerId: 0,
-    opacity: 0.6,
-    fallbackLegend: [
-      { label: 'Very high (> 2 m)', color: 'rgb(0,38,115)' },
-      { label: 'High (1–2 m)', color: 'rgb(89,0,255)' },
-      { label: 'Moderate (0.5–1 m)', color: 'rgb(176,69,255)' },
-      { label: 'Low (< 0.5 m)', color: 'rgb(227,209,255)' }
-    ]
-  },
-  landslide: {
-    name: 'Rain-induced landslide susceptibility',
-    source: 'DENR-MGB via GeoRisk PH',
-    base: 'https://ulap-hazards.georisk.gov.ph/arcgis/rest/services/MGBPublic/RainInducedLandslide/MapServer',
-    layerId: 0,
-    opacity: 0.6,
-    fallbackLegend: [
-      { label: 'High landslide susceptibility', color: 'rgb(255,0,0)' },
-      { label: 'Moderate landslide susceptibility', color: 'rgb(255,170,0)' }
-    ]
-  },
-  earthquake: {
-    name: 'Earthquake & Volcanic Hazards',
-    source: 'PHIVOLCS via GeoRisk PH',
-    base: 'https://ulap-hazards.georisk.gov.ph/arcgis/rest/services/PHIVOLCS/PHIVOLCSHazards/MapServer',
-    layerId: 0,
-    opacity: 0.5,
-    fallbackLegend: [
-      { label: 'Active Fault Trace / Volcanic Hazard Zone', color: 'rgb(217,95,2)' }
-    ]
-  }
-};
+// DEMONSTRATION LOCATIONS ONLY. Verify every facility with official sources.
+const places = [
+  { id: 1, name: 'Davao City Hall area', type: 'evacuation', description: 'Sample map point for interface demonstration. This is not a confirmed evacuation center.', address: 'San Pedro Street, Poblacion District', position: [7.0644, 125.6095] },
+  { id: 2, name: 'People’s Park area', type: 'evacuation', description: 'Sample community gathering point. Confirm official evacuation status before relying on it.', address: 'Legazpi Street, Poblacion District', position: [7.0677, 125.6092] },
+  { id: 3, name: 'Ramon Magsaysay Park area', type: 'evacuation', description: 'Sample map pin only; not a confirmed evacuation center.', address: 'R. Magsaysay Avenue, Agdao area', position: [7.0796, 125.6247] },
+  { id: 4, name: 'Southern Philippines Medical Center', type: 'hospital', description: 'Medical facility reference point. Verify current emergency services and access.', address: 'J.P. Laurel Avenue, Bajada', position: [7.0935, 125.6137] },
+  { id: 5, name: 'Davao Doctors Hospital', type: 'hospital', description: 'Medical facility reference point. Verify current emergency services and access.', address: '118 E. Quirino Avenue', position: [7.0698, 125.6116] },
+  { id: 6, name: 'Police station reference', type: 'response', description: 'Illustrative response-service marker. Confirm station details.', address: 'Poblacion District, Davao City', position: [7.0656, 125.6074] },
+  { id: 7, name: 'Fire station reference', type: 'response', description: 'Illustrative response-service marker. Confirm station details.', address: 'Central Davao City', position: [7.0712, 125.6161] }
+];
+
+// Approximate illustrative circles, NOT official flood boundaries or live hazard data.
+const hazardZones = [
+  { name: 'Illustrative low-lying area A', center: [7.0804, 125.6252], radius: 850 },
+  { name: 'Illustrative low-lying area B', center: [7.0585, 125.6040], radius: 650 }
+];
 
 const typeMeta = {
-  evacuation: { label: 'Assembly / evacuation point', color: '#15966b', icon: '⌂' },
-  hospital: { label: 'Hospital', color: '#e15b65', icon: '+' },
-  response: { label: 'Police / fire station', color: '#3978d4', icon: '✚' },
-  gym: { label: 'Gym / Fitness Center', color: '#f59e0b', icon: '⚡' },
-  school: { label: 'School', color: '#8b5cf6', icon: '🎓' }
+  evacuation: { label: 'Evacuation (demo)', color: '#15966b', icon: '⌂' },
+  hospital: { label: 'Medical facility', color: '#e15b65', icon: '+' },
+  response: { label: 'Police / fire reference', color: '#3978d4', icon: '✚' }
 };
 
-const DEFAULT_STATUS = 'Click any map location or facility for coordinates & hazard check';
-
 let map;
-const places = [];                 
-const markerById = new Map();      
-let fetchedAreas = [];             
-let geoResults = [];               
-let facilityTimer = null;
-let hazardOverlays = {};
+let markers = [];
+let hazardLayers = [];
 let activePlaceId = null;
 let userMarker = null;
 let routeLayer = null;
 let userPosition = null;
 let toastTimer;
-let checkToken = 0;
 
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -90,32 +59,9 @@ function getIncidents() {
   } catch { return []; }
 }
 
-async function fetchJSON(url, timeoutMs = 12000, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
-  } finally { clearTimeout(timer); }
-}
-
-function showMapLoading(message) {
-  let loaderEl = document.querySelector('.map-loading');
-  if (!loaderEl) {
-    loaderEl = document.createElement('div');
-    loaderEl.className = 'map-loading';
-    loaderEl.innerHTML = '<div class="loader"></div><strong id="loadingText">Preparing safety map...</strong><span>Loading facility nodes</span>';
-    document.querySelector('.map-wrap')?.appendChild(loaderEl);
-  } else {
-    const text = loaderEl.querySelector('#loadingText');
-    if (text) text.textContent = message;
-  }
-}
-
-function hideMapLoading() {
-  const loaderEl = document.querySelector('.map-loading');
-  if (loaderEl) loaderEl.remove();
+function saveIncidents(items) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+  catch { showToast('Could not save this report. Browser storage may be unavailable.'); }
 }
 
 function makeIcon(type) {
@@ -127,67 +73,29 @@ function makeIcon(type) {
   });
 }
 
-function matchesQuery(place, query) {
-  return `${place.name} ${place.address} ${typeMeta[place.type]?.label || ''}`.toLowerCase().includes(query.toLowerCase());
-}
-
-function placesInView() {
-  if (!map) return [];
-  const bounds = map.getBounds();
-  return places.filter(place => bounds.contains(place.position));
-}
-
-function renderLocationList() {
+function renderLocationList(filter = '') {
   const list = $('#locationList');
-  if(!list) return;
-  const query = $('#mapSearch')?.value.trim() || '';
-  const center = map ? map.getCenter() : L.latLng(DAVAO_COORDS[0], DAVAO_COORDS[1]);
-  const nearby = placesInView()
-    .filter(place => !query || matchesQuery(place, query))
-    .sort((a, b) => center.distanceTo(a.position) - center.distanceTo(b.position))
-    .slice(0, 40);
-  
-  const geoHtml = geoResults.map((item, index) => `
-    <button class="location-item" data-geo-index="${index}">
-      <span class="mini-marker place">⌖</span>
-      <span class="location-item-copy"><strong>${escapeHTML(item.name)}</strong><small>${escapeHTML(item.detail)}</small></span>
-      <span class="item-chevron">›</span>
-    </button>`).join('');
-
-  const placeHtml = nearby.map(place => `
-    <button class="location-item ${activePlaceId === place.id ? 'active' : ''}" data-place-id="${escapeHTML(place.id)}">
-      <span class="mini-marker ${place.type}">${typeMeta[place.type]?.icon || '•'}</span>
+  const query = filter.toLowerCase();
+  const visible = places.filter(place => `${place.name} ${place.address} ${place.type}`.toLowerCase().includes(query));
+  list.innerHTML = visible.map(place => `
+    <button class="location-item ${activePlaceId === place.id ? 'active' : ''}" data-place-id="${place.id}">
+      <span class="mini-marker ${place.type}">${typeMeta[place.type].icon}</span>
       <span class="location-item-copy"><strong>${escapeHTML(place.name)}</strong><small>${escapeHTML(place.address)}</small></span>
       <span class="item-chevron">›</span>
-    </button>`).join('');
-
-  let empty = '';
-  if (!geoHtml && !placeHtml) {
-    empty = '<div class="empty-list">No matching verified facilities in view. Pan or zoom the map.</div>';
-  }
-  
-  const heading = $('#locationHeading');
-  if(heading) heading.textContent = geoHtml ? 'SEARCH RESULTS & NEARBY' : 'VERIFIED FACILITIES IN VIEW';
-  list.innerHTML = geoHtml + placeHtml + empty;
-  
-  list.querySelectorAll('[data-place-id]').forEach(button => button.addEventListener('click', () => selectPlace(button.dataset.placeId, true)));
-  list.querySelectorAll('[data-geo-index]').forEach(button => button.addEventListener('click', () => goToGeoResult(geoResults[Number(button.dataset.geoIndex)])));
+    </button>`).join('') || '<div class="empty-list">No matching locations found.</div>';
+  list.querySelectorAll('[data-place-id]').forEach(button => {
+    button.addEventListener('click', () => selectPlace(Number(button.dataset.placeId), true));
+  });
 }
 
 function popupContent(place) {
-  const meta = typeMeta[place.type] || { color: '#2868c7', label: 'Facility' };
-  const { lat, lng } = place.position;
-  return `<div class="info-window detailed-popup">
-    <span class="info-type" style="color:${meta.color}">${escapeHTML(place.kind)}</span>
+  const meta = typeMeta[place.type];
+  return `<div class="info-window">
+    <span class="info-type" style="color:${meta.color}">${escapeHTML(meta.label)}</span>
     <strong>${escapeHTML(place.name)}</strong>
-    <div class="info-coords">📍 <b>Lat/Lng:</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
-    ${place.address ? `<div class="info-row">🏠 <b>Address:</b> ${escapeHTML(place.address)}</div>` : ''}
-    ${place.phone ? `<div class="info-row">📞 <b>Phone:</b> ${escapeHTML(place.phone)}</div>` : ''}
-    <p>Verified OpenStreetMap facility record.</p>
-    <div class="popup-actions-row">
-      <button type="button" class="popup-action" data-check-lat="${lat}" data-check-lng="${lng}">Check Hazards</button>
-      <a class="popup-route" href="https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=%3B${lat}%2C${lng}" target="_blank" rel="noopener">Directions ↗</a>
-    </div>
+    <p>${escapeHTML(place.description)}</p>
+    <small>${escapeHTML(place.address)}</small>
+    <a class="popup-route" href="https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${place.position[0]}%2C${place.position[1]}" target="_blank" rel="noopener">Open directions ↗</a>
   </div>`;
 }
 
@@ -196,283 +104,82 @@ function selectPlace(id, panTo = false) {
   const marker = markerById.get(id);
   if (!place || !map || !marker) return;
   activePlaceId = id;
-  if (!map.hasLayer(marker)) {
-    marker.addTo(map);
+  const entry = markers.find(item => item.place.id === id);
+  if (entry) {
+    entry.marker.bindPopup(popupContent(place), { maxWidth: 260 }).openPopup();
+    if (panTo) map.setView(place.position, 16, { animate: true });
   }
-  if (panTo) map.setView(place.position, 16, { animate: true });
-  marker.openPopup();
-  renderLocationList();
-  const status = $('#mapStatus');
-  if(status) status.textContent = `Selected: ${place.name} (${place.position.lat.toFixed(4)}, ${place.position.lng.toFixed(4)})`;
-  const sidebar = $('#sidebar');
-  if(sidebar) sidebar.classList.remove('sidebar-open');
-}
-
-function classifyElement(tags) {
-  if (tags.amenity === 'hospital') return { type: 'hospital', kind: 'Hospital' };
-  if (tags.amenity === 'police') return { type: 'response', kind: 'Police station' };
-  if (tags.amenity === 'fire_station') return { type: 'response', kind: 'Fire station' };
-  if (tags.amenity === 'gym' || tags.leisure === 'fitness_centre' || tags.leisure === 'sports_centre') return { type: 'gym', kind: 'Gym / Fitness Center' };
-  if (tags.amenity === 'school') return { type: 'school', kind: 'School' };
-  if (tags.emergency === 'assembly_point') return { type: 'evacuation', kind: 'Assembly Point' };
-  return null;
-}
-
-function addElements(elements) {
-  let added = 0;
-  elements.forEach(el => {
-    const tags = el.tags || {};
-    if (!tags.name && !tags['name:en'] && !tags.operator) return;
-
-    const cls = classifyElement(tags);
-    const lat = el.lat ?? el.center?.lat, lng = el.lon ?? el.center?.lon;
-    const id = `${el.type}/${el.id}`;
-    if (!cls || lat === undefined || lng === undefined || markerById.has(id)) return;
-
-    const address = [tags['addr:housenumber'], tags['addr:street'], tags['addr:suburb'] || tags['addr:barangay'], tags['addr:city'] || tags['addr:municipality']].filter(Boolean).join(', ');
-    const place = {
-      id, type: cls.type, kind: cls.kind,
-      name: tags.name || tags['name:en'] || `Unnamed ${cls.kind.toLowerCase()}`,
-      address: address || 'Davao Region, Philippines',
-      phone: tags.phone || tags['contact:phone'] || '',
-      position: L.latLng(lat, lng)
-    };
-    const marker = L.marker(place.position, { icon: makeIcon(place.type), title: place.name });
-    marker.bindPopup(() => popupContent(place), { maxWidth: 280 });
-    marker.on('click', () => { 
-      activePlaceId = place.id; 
-      renderLocationList(); 
-      const status = $('#mapStatus');
-      if(status) status.textContent = `Selected: ${place.name} | Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`; 
-    });
-    places.push(place);
-    markerById.set(id, marker);
-    const toggle = document.querySelector(`[data-layer="${place.type}"]`);
-    if (!toggle || toggle.checked) marker.addTo(map);
-    added += 1;
-  });
-  return added;
-}
-
-function pruneMarkers() {
-  if (places.length <= MAX_MARKERS) return;
-  const keep = map.getBounds().pad(1);
-  for (let i = places.length - 1; i >= 0; i -= 1) {
-    if (keep.contains(places[i].position)) continue;
-    const marker = markerById.get(places[i].id);
-    if (marker) map.removeLayer(marker);
-    markerById.delete(places[i].id);
-    places.splice(i, 1);
-  }
-  fetchedAreas = [];
-}
-
-async function overpass(query) {
-  let lastError;
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    try {
-      return await fetchJSON(endpoint, 30000, {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `data=${encodeURIComponent(query)}`
-      });
-    } catch (error) { lastError = error; }
-  }
-  throw lastError;
-}
-
-function facilityQuery(area) {
-  const bb = `${area.getSouth()},${area.getWest()},${area.getNorth()},${area.getEast()}`;
-  return `[out:json][timeout:25];(
-    nwr["amenity"="hospital"](${bb});
-    nwr["amenity"="police"](${bb});
-    nwr["amenity"="fire_station"](${bb});
-    nwr["amenity"="gym"](${bb});
-    nwr["leisure"="fitness_centre"](${bb});
-    nwr["leisure"="sports_centre"](${bb});
-    nwr["amenity"="school"](${bb});
-    nwr["emergency"="assembly_point"](${bb});
-  );out center tags 800;`;
-}
-
-function setFacilityStatus(text) { 
-  const status = $('#mapStatus');
-  if (status && !routeLayer) status.textContent = text; 
-}
-
-async function loadFacilities() {
-  if (!map) return;
-  showMapLoading('Fetching verified facilities from OpenStreetMap...');
-  const view = map.getBounds();
-  const area = view.pad(0.25);
-  try {
-    const data = await overpass(facilityQuery(area));
-    const added = addElements(data.elements || []);
-    fetchedAreas.push(area);
-    pruneMarkers();
-    setFacilityStatus(`✓ Loaded ${placesInView().length} verified facilities (${added} new)`);
-  } catch {
-    setFacilityStatus('⚠️ Overpass API rate-limited. Retrying on pan/zoom.');
-  } finally {
-    hideMapLoading();
-  }
-  renderLocationList(); 
-  updateStats();
-}
-
-function scheduleFacilityLoad() {
-  clearTimeout(facilityTimer);
-  facilityTimer = setTimeout(loadFacilities, 700);
-}
-
-/* ---------- Hazard Overlays & Multi-Hazard Check ---------- */
-
-function createHazardLayer(key) {
-  const service = HAZARD_SERVICES[key];
-  const ExportLayer = L.TileLayer.extend({
-    getTileUrl(coords) {
-      const [nw, se] = this._tileCoordsToNwSe(coords).map(ll => this._map.options.crs.project(ll));
-      const size = this.getTileSize();
-      const params = new URLSearchParams({
-        f: 'image', format: 'png32', transparent: 'true',
-        bbox: `${nw.x},${se.y},${se.x},${nw.y}`,
-        bboxSR: '3857', imageSR: '3857',
-        size: `${size.x},${size.y}`, dpi: '96',
-        layers: `show:${service.layerId}`
-      });
-      return `${service.base}/export?${params.toString()}`;
-    }
-  });
-  return new ExportLayer('', { opacity: service.opacity, tileSize: 256, minZoom: 5, maxZoom: 20 });
-}
-
-async function loadLegend(key) {
-  const service = HAZARD_SERVICES[key];
-  try {
-    const data = await fetchJSON(`${service.base}/legend?f=json`);
-    const layer = (data.layers || []).find(item => item.layerId === service.layerId) || (data.layers || [])[0];
-    const entries = (layer?.legend || []).filter(item => item.imageData).map(item => ({
-      label: item.label || '', image: `data:${item.contentType || 'image/png'};base64,${item.imageData}`
-    }));
-    if (entries.length) return entries;
-  } catch { /* fall through */ }
-  return service.fallbackLegend;
-}
-
-async function renderHazardLegend() {
-  const box = $('#hazardLegend');
-  if (!box) return;
-  const active = Object.keys(HAZARD_SERVICES).filter(key => document.querySelector(`[data-layer="${key}"]`)?.checked);
-  if (!active.length) { box.innerHTML = ''; box.hidden = true; return; }
-  box.hidden = false;
-  const sections = await Promise.all(active.map(async key => {
-    HAZARD_SERVICES[key]._legend = HAZARD_SERVICES[key]._legend || await loadLegend(key);
-    const rows = HAZARD_SERVICES[key]._legend.map(item => {
-      const swatch = item.image ? `<img src="${item.image}" alt="" width="14" height="14">` : `<i style="background:${escapeHTML(item.color)}"></i>`;
-      return `<li>${swatch}<span>${escapeHTML(item.label)}</span></li>`;
-    }).join('');
-    return `<div class="hz-legend-group"><b>${escapeHTML(HAZARD_SERVICES[key].name)}</b><ul>${rows}</ul></div>`;
-  }));
-  box.innerHTML = sections.join('');
+  renderLocationList($('#mapSearch').value);
+  $('#mapStatus').textContent = `Selected: ${place.name} · Demonstration location`;
 }
 
 function setLayerVisibility() {
-  if (!map) return;
   document.querySelectorAll('[data-layer]').forEach(input => {
-    const key = input.dataset.layer;
-    const targets = key in HAZARD_SERVICES
-      ? [hazardOverlays[key]].filter(Boolean)
-      : places.filter(place => place.type === key).map(place => markerById.get(place.id)).filter(Boolean);
-    targets.forEach(layer => {
-      if (input.checked && !map.hasLayer(layer)) layer.addTo(map);
-      if (!input.checked && map.hasLayer(layer)) map.removeLayer(layer);
+    const layer = input.dataset.layer;
+    markers.forEach(({ place, marker }) => {
+      const matches = (layer === 'evacuation' && place.type === 'evacuation') ||
+        (layer === 'hospital' && place.type === 'hospital') ||
+        (layer === 'response' && place.type === 'response');
+      if (matches) input.checked ? marker.addTo(map) : map.removeLayer(marker);
     });
+    if (layer === 'hazard') hazardLayers.forEach(circle => input.checked ? circle.addTo(map) : map.removeLayer(circle));
   });
-  renderHazardLegend();
-}
-
-async function queryHazard(key, lat, lng) {
-  const service = HAZARD_SERVICES[key];
-  const params = new URLSearchParams({
-    f: 'json', where: '1=1', geometry: `${lng},${lat}`, geometryType: 'esriGeometryPoint', inSR: '4326',
-    spatialRel: 'esriSpatialRelIntersects', outFields: '*', returnGeometry: 'false'
-  });
-  try {
-    const data = await fetchJSON(`${service.base}/${service.layerId}/query?${params.toString()}`, 5000);
-    if (data.error) throw new Error(data.error.message);
-    return { count: (data.features || []).length };
-  } catch {
-    return { count: 0, offline: true };
-  }
-}
-
-function hazardResultHTML(key, outcome) {
-  const name = escapeHTML(HAZARD_SERVICES[key].name);
-  if (outcome.status === 'rejected' || outcome.value?.offline) {
-    return `<div class="hz-row hz-unknown"><span>${name}</span><b>Zone Clear / Low Risk</b></div>`;
-  }
-  const { count } = outcome.value;
-  if (!count) return `<div class="hz-row hz-none"><span>${name}</span><b>No mapped hazard zone here</b></div>`;
-  return `<div class="hz-row hz-hit"><span>${name}</span><b>Mapped within hazard zone</b></div>`;
-}
-
-async function checkHazards(latlng) {
-  if (!map) return;
-  const token = ++checkToken;
-  const lat = latlng.lat, lng = latlng.lng;
-  const head = `<strong>Location Hazard & Info Check</strong><small>Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}</small>`;
-  const popup = L.popup({ maxWidth: 300, className: 'hazard-popup' }).setLatLng(latlng)
-    .setContent(`<div class="info-window">${head}<p>Querying MGB & PHIVOLCS servers…</p></div>`).openOn(map);
-  const keys = Object.keys(HAZARD_SERVICES);
-  const outcomes = await Promise.allSettled(keys.map(key => queryHazard(key, lat, lng)));
-  if (token !== checkToken || !popup.isOpen()) return;
-  const body = keys.map((key, index) => hazardResultHTML(key, outcomes[index])).join('');
-  popup.setContent(`<div class="info-window">${head}<div class="hz-results">${body}</div>
-    <p class="hz-note">Clicked Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
-    <a class="popup-route" href="${HAZARDHUNTER_URL}" target="_blank" rel="noopener">Official HazardHunterPH ↗</a></div>`);
 }
 
 function updateStats() {
-  const inView = placesInView();
-  const count = type => String(inView.filter(p => p.type === type).length).padStart(2, '0');
-  const evac = $('#evacCount');
-  const hosp = $('#hospitalCount');
-  const resp = $('#responseCount');
-  const inc = $('#incidentCount');
-  if(evac) evac.textContent = count('evacuation');
-  if(hosp) hosp.textContent = count('hospital');
-  if(resp) resp.textContent = String(Number(count('response')) + Number(count('gym')) + Number(count('school'))).padStart(2, '0');
-  if(inc) inc.textContent = String(getIncidents().length).padStart(2, '0');
+  $('#evacCount').textContent = String(places.filter(p => p.type === 'evacuation').length).padStart(2, '0');
+  $('#hospitalCount').textContent = String(places.filter(p => p.type === 'hospital').length).padStart(2, '0');
+  $('#responseCount').textContent = String(places.filter(p => p.type === 'response').length).padStart(2, '0');
+  $('#incidentCount').textContent = String(getIncidents().length).padStart(2, '0');
 }
 
 function initMap() {
-  map = L.map('map', { zoomControl: true, scrollWheelZoom: true }).setView(DAVAO_COORDS, 14);
+  const loading = document.querySelector('.map-loading');
+  if (!window.L) {
+    loading.innerHTML = '<div class="map-error-icon">!</div><strong>Map library could not load</strong><span>Check your internet connection and reload the page.</span>';
+    return;
+  }
 
-  const baseTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
+  map = L.map('map', { zoomControl: true, scrollWheelZoom: true }).setView(DAVAO_CENTER, 14);
+  // CARTO's public raster basemap avoids directly relying on the
+  // community OSM standard tile server. No API key is needed for this prototype.
+  // Respect the provider's fair-use policy and use a dedicated tile service for production.
+  const baseTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
   }).addTo(map);
 
-  const satelliteTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19
+  let tileErrorShown = false;
+  baseTiles.on('tileerror', () => {
+    if (tileErrorShown) return;
+    tileErrorShown = true;
+    $('#mapStatus').textContent = 'Map tiles could not load. Check your internet connection or tile provider access.';
+    showToast('The map background could not load. Please check your internet connection.');
   });
-  L.control.layers({ 'Street map': baseTiles, 'Satellite': satelliteTiles }, null, { position: 'topright' }).addTo(map);
-
   baseTiles.once('load', () => {
-    loadFacilities();
+    tileErrorShown = false;
+    $('#mapStatus').textContent = 'Map loaded · Demonstration locations in Davao City';
   });
 
-  setTimeout(() => {
-    loadFacilities();
-  }, 1500);
-
-  Object.keys(HAZARD_SERVICES).forEach(key => { hazardOverlays[key] = createHazardLayer(key); });
-
-  map.on('click', event => checkHazards(event.latlng));
-  map.on('popupopen', event => {
-    const button = event.popup.getElement()?.querySelector('[data-check-lat]');
-    if (button) button.addEventListener('click', () => checkHazards(L.latLng(Number(button.dataset.checkLat), Number(button.dataset.checkLng))));
+  markers = places.map(place => {
+    const marker = L.marker(place.position, { icon: makeIcon(place.type), title: place.name }).addTo(map);
+    marker.bindPopup(popupContent(place), { maxWidth: 260 });
+    marker.on('click', () => {
+      activePlaceId = place.id;
+      renderLocationList($('#mapSearch').value);
+      $('#mapStatus').textContent = `Selected: ${place.name} · Demonstration location`;
+    });
+    return { place, marker };
   });
 
-  map.on('moveend', scheduleFacilityLoad);
+  hazardLayers = hazardZones.map(zone => L.circle(zone.center, {
+    radius: zone.radius, color: '#d99a35', weight: 1.5,
+    opacity: 0.85, fillColor: '#e8b95f', fillOpacity: 0.22,
+    interactive: false
+  }).addTo(map));
+
+  loading.remove();
   setLayerVisibility();
   renderLocationList();
   updateStats();
@@ -480,119 +187,136 @@ function initMap() {
 }
 
 function locateUser() {
-  return new Promise(resolve => {
-    if (!map) { resolve(null); return; }
-    if (!navigator.geolocation) {
-      showToast('Geolocation is not supported by your browser.');
-      resolve(null);
-      return;
-    }
-    showToast('Requesting your precise location…');
-    navigator.geolocation.getCurrentPosition(position => {
-      userPosition = [position.coords.latitude, position.coords.longitude];
-      if (userMarker) map.removeLayer(userMarker);
-      userMarker = L.circleMarker(userPosition, {
-        radius: 11, color: '#fff', weight: 3, fillColor: '#2868c7', fillOpacity: 1
-      }).addTo(map).bindPopup(`<b>Your Location</b><br>Lat: ${userPosition[0].toFixed(5)}<br>Lng: ${userPosition[1].toFixed(5)}`);
-      map.setView(userPosition, 16);
-      userMarker.openPopup();
-      const status = $('#mapStatus');
-      if(status) status.textContent = `Your Location: ${userPosition[0].toFixed(4)}, ${userPosition[1].toFixed(4)}`;
-      showToast('Successfully located your position.');
-      resolve(userPosition);
-    }, error => {
-      showToast('Location access denied or timed out. Defaulting to Davao City.');
-      map.setView(DAVAO_COORDS, 14);
-      resolve(null);
-    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
-  });
+  if (!navigator.geolocation) { showToast('Location services are not supported by this browser.'); return; }
+  showToast('Requesting your location…');
+  navigator.geolocation.getCurrentPosition(position => {
+    userPosition = [position.coords.latitude, position.coords.longitude];
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker(userPosition, {
+      radius: 9, color: '#fff', weight: 3, fillColor: '#2868c7', fillOpacity: 1
+    }).addTo(map).bindPopup('Your current location');
+    map.setView(userPosition, 16);
+    userMarker.openPopup();
+    $('#mapStatus').textContent = 'Showing your current location';
+    showToast('Your location is now shown on the map.');
+  }, error => {
+    const messages = { 1: 'Location permission was denied.', 2: 'Your location is currently unavailable.', 3: 'Location request timed out.' };
+    showToast(messages[error.code] || 'Unable to get your location.');
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
 }
 
-async function searchPlaces() {
-  const searchInput = $('#mapSearch');
-  if(!searchInput) return;
-  const query = searchInput.value.trim();
-  if (query.length < 2) return;
-  const status = $('#mapStatus');
-  if(status) status.textContent = `Searching for “${query}”…`;
+function haversineKm(a, b) {
+  const rad = value => value * Math.PI / 180;
+  const dLat = rad(b[0] - a[0]);
+  const dLng = rad(b[1] - a[1]);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+async function findNearestCenter() {
+  if (!userPosition) {
+    showToast('First select My location so SafeZone can find the nearest center.');
+    locateUser();
+    return;
+  }
+  const centers = places.filter(place => place.type === 'evacuation');
+  const nearest = centers.map(place => ({ place, distance: haversineKm(userPosition, place.position) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+  if (!nearest) { showToast('No demonstration evacuation points are available.'); return; }
+
+  const destination = nearest.place.position;
+  const url = `https://router.project-osrm.org/route/v1/driving/${userPosition[1]},${userPosition[0]};${destination[1]},${destination[0]}?overview=full&geometries=geojson`;
+  $('#mapStatus').textContent = `Nearest listed point: ${nearest.place.name} · ${nearest.distance.toFixed(1)} km straight-line`;
+  showToast(`Finding a sample route to ${nearest.place.name}…`);
+
   try {
-    const params = new URLSearchParams({ format: 'jsonv2', countrycodes: 'ph', limit: '6', q: query });
-    const data = await fetchJSON(`${NOMINATIM_URL}?${params.toString()}`);
-    geoResults = data.map(item => ({
-      name: item.name || item.display_name.split(',')[0],
-      detail: item.display_name,
-      lat: Number(item.lat), lng: Number(item.lon),
-      bounds: item.boundingbox ? [[Number(item.boundingbox[0]), Number(item.boundingbox[2])], [Number(item.boundingbox[1]), Number(item.boundingbox[3])]] : null
-    }));
-    renderLocationList();
-    if (!geoResults.length) { 
-      if(status) status.textContent = `No place found for “${query}”.`; 
-      return; 
-    }
-    goToGeoResult(geoResults[0]);
-  } catch {
-    if(status) status.textContent = 'Place search unavailable right now.';
-    showToast('Search service could not be reached.');
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Routing service unavailable');
+    const data = await response.json();
+    if (data.code !== 'Ok' || !data.routes?.length) throw new Error('No route returned');
+    if (routeLayer) map.removeLayer(routeLayer);
+    const coordinates = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+    routeLayer = L.polyline(coordinates, { color: '#2868c7', weight: 5, opacity: 0.88 }).addTo(map);
+    map.fitBounds(routeLayer.getBounds(), { padding: [55, 55] });
+    selectPlace(nearest.place.id, false);
+    const km = (data.routes[0].distance / 1000).toFixed(1);
+    const mins = Math.round(data.routes[0].duration / 60);
+    $('#mapStatus').textContent = `Sample route: ${km} km · about ${mins} min to ${nearest.place.name}`;
+    showToast(`Route displayed: ${km} km, approximately ${mins} minutes.`);
+  } catch (error) {
+    showToast('Could not load a route. Try again or open directions from the location popup.');
   }
 }
 
-function goToGeoResult(item) {
-  if (!item || !map) return;
-  if (item.bounds) map.fitBounds(item.bounds, { maxZoom: 15, padding: [30, 30] });
-  else map.setView([item.lat, item.lng], 14);
-  const sidebar = $('#sidebar');
-  if(sidebar) sidebar.classList.remove('sidebar-open');
-  const status = $('#mapStatus');
-  if(status) status.textContent = `${item.name} (${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}) · Click map for hazard check`;
+function searchLocations() {
+  const query = $('#mapSearch').value.trim().toLowerCase();
+  renderLocationList(query);
+  const match = places.find(place => `${place.name} ${place.address} ${place.type}`.toLowerCase().includes(query));
+  if (query && match) selectPlace(match.id, true);
+  else if (query) $('#mapStatus').textContent = 'No matching demonstration location. Try another keyword.';
+  else $('#mapStatus').textContent = 'Showing demonstration locations in Davao City';
+}
+
+function openReportModal() {
+  $('#reportModal').classList.add('open');
+  $('#reportModal').setAttribute('aria-hidden', 'false');
+  setTimeout(() => $('#incidentType').focus(), 80);
+}
+function closeReportModal() {
+  $('#reportModal').classList.remove('open');
+  $('#reportModal').setAttribute('aria-hidden', 'true');
+}
+
+function submitIncident(event) {
+  event.preventDefault();
+  const incident = {
+    id: Date.now(), type: $('#incidentType').value,
+    location: $('#incidentLocation').value.trim(),
+    description: $('#incidentDescription').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  const incidents = getIncidents();
+  incidents.unshift(incident);
+  saveIncidents(incidents);
+  updateStats();
+  $('#incidentForm').reset();
+  closeReportModal();
+  showToast('Incident report saved on this device only.');
+}
+
+function resetMap() {
+  if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+  map.setView(DAVAO_CENTER, 14);
+  map.closePopup();
+  activePlaceId = null;
+  renderLocationList($('#mapSearch').value);
+  $('#mapStatus').textContent = 'Showing demonstration locations in Davao City';
 }
 
 function setupUI() {
   document.querySelectorAll('[data-layer]').forEach(input => input.addEventListener('change', setLayerVisibility));
-  const searchInput = $('#mapSearch');
-  if(searchInput) {
-    searchInput.addEventListener('input', () => { if (!searchInput.value) geoResults = []; renderLocationList(); });
-    searchInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces(); } });
-  }
-  const locateBtn = $('#locateMe');
-  if(locateBtn) locateBtn.addEventListener('click', locateUser);
-  
-  const resetBtn = $('#resetMap');
-  if(resetBtn) resetBtn.addEventListener('click', () => {
-    if(map) map.setView(DAVAO_COORDS, 14);
-  });
-
-  const showAllBtn = $('#showAll');
-  if(showAllBtn) showAllBtn.addEventListener('click', () => {
-    if(searchInput) searchInput.value = '';
-    geoResults = [];
+  $('#mapSearch').addEventListener('input', searchLocations);
+  $('#locateMe').addEventListener('click', locateUser);
+  $('#findNearest').addEventListener('click', findNearestCenter);
+  $('#resetMap').addEventListener('click', resetMap);
+  $('#showAll').addEventListener('click', () => {
+    $('#mapSearch').value = '';
     renderLocationList();
+    if (map) map.fitBounds(L.latLngBounds(places.map(place => place.position)), { padding: [45, 45] });
   });
-
-  const openReport = $('#openReport');
-  const closeReport = $('#closeReport');
-  const cancelReport = $('#cancelReport');
-  const reportModal = $('#reportModal');
-  const incidentForm = $('#incidentForm');
-
-  if(openReport) openReport.addEventListener('click', () => reportModal.classList.add('open'));
-  if(closeReport) closeReport.addEventListener('click', () => reportModal.classList.remove('open'));
-  if(cancelReport) cancelReport.addEventListener('click', () => reportModal.classList.remove('open'));
-  if(incidentForm) incidentForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const incidents = getIncidents();
-    incidents.unshift({
-      id: Date.now(),
-      type: $('#incidentType').value,
-      location: $('#incidentLocation').value,
-      description: $('#incidentDescription').value
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(incidents));
-    reportModal.classList.remove('open');
-    incidentForm.reset();
-    updateStats();
-    showToast('Incident report saved locally.');
+  $('#openReport').addEventListener('click', openReportModal);
+  $('#closeReport').addEventListener('click', closeReportModal);
+  $('#cancelReport').addEventListener('click', closeReportModal);
+  $('#incidentForm').addEventListener('submit', submitIncident);
+  $('#reportModal').addEventListener('click', event => { if (event.target === $('#reportModal')) closeReportModal(); });
+  $('#openSidebar').addEventListener('click', () => $('#sidebar').classList.add('sidebar-open'));
+  $('#closeSidebar').addEventListener('click', () => $('#sidebar').classList.remove('sidebar-open'));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeReportModal();
+    if (event.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      event.preventDefault(); $('#mapSearch').focus();
+    }
   });
-
   updateStats();
 }
 

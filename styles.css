@@ -2,6 +2,7 @@
 
 /* Big Prominent Map Markers */
 .safezone-marker-wrap { background: transparent; border: 0; }
+<<<<<<< HEAD
 .safezone-marker-large { width: 44px; height: 44px; display: grid; place-items: center; background: var(--marker-color); color: #fff; border: 3px solid #ffffff; border-radius: 50% 50% 50% 8px; transform: rotate(-45deg); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
 .safezone-marker-large span { transform: rotate(45deg); font-size: 20px; font-weight: 800; line-height: 1; }
 
@@ -19,6 +20,18 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Hazard overlays & legend */
+=======
+.safezone-marker { width: 36px; height: 36px; display: grid; place-items: center; background: var(--marker-color); color: #fff; border: 3px solid #fff; border-radius: 50% 50% 50% 8px; transform: rotate(-45deg); box-shadow: 0 3px 10px #14243b38; }
+.safezone-marker span { transform: rotate(45deg); font-size: 17px; font-weight: 800; line-height: 1; }
+.leaflet-popup-content-wrapper { border-radius: 11px; box-shadow: 0 8px 25px #14243b20; }
+.leaflet-popup-content { margin: 12px 14px; }
+.popup-route { display: inline-block; margin-top: 5px; color: #2868c7; font-size: 10px; font-weight: 700; text-decoration: none; }
+.popup-route:hover { text-decoration: underline; }
+#findNearest { color: #2868c7; }
+@media(max-width:760px) { .map-tools { flex-wrap: wrap; justify-content: flex-end; } .search-wrap { width: min(220px, 55vw); } }
+
+/* Hazard overlays, legend and hazard-check popup (v1.1) */
+>>>>>>> 9b2ccc84aabf9e2d16bb572b29fdc3057897bd2e
 .hazard-legend{margin:6px 5px 0;padding:10px 11px;border:1px solid #e8edf3;border-radius:10px;background:#fafbfd;display:flex;flex-direction:column;gap:9px}
 .hazard-legend[hidden]{display:none}
 .hz-legend-group b{display:block;font-size:9px;letter-spacing:.4px;color:#5d6b7e;margin-bottom:5px}
@@ -27,10 +40,22 @@
 .hz-legend-group li i,.hz-legend-group li img{width:14px;height:14px;border-radius:3px;flex:none;border:1px solid #0001}
 .popup-action{align-self:flex-start;border:1px solid #d6e2f5;background:#eaf1fc;color:#2868c7;font:700 10px 'DM Sans',sans-serif;padding:6px 10px;border-radius:7px;cursor:pointer}
 .popup-action:hover{background:#dce9fb}
+<<<<<<< HEAD
+=======
+.hazard-popup .info-window{max-width:260px}
+>>>>>>> 9b2ccc84aabf9e2d16bb572b29fdc3057897bd2e
 .hz-results{display:flex;flex-direction:column;gap:5px}
 .hz-row{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:8px;background:#f4f6f9;border-left:3px solid #b4bdc9}
 .hz-row span{font-size:9px;color:#788598}
 .hz-row b{font-size:11px;color:#1d2d43}
 .hz-hit{background:#fff6e6;border-left-color:#d99a35}
 .hz-none{background:#eef8f3;border-left-color:#22a77a}
+<<<<<<< HEAD
 .hz-unknown{background:#f4f6f9}
+=======
+.hz-unknown{background:#f4f6f9}
+.info-window .hz-note{font-size:9px;color:#8c98a8}
+.main-footer a{color:inherit;text-decoration:underline}
+.mini-marker.place{background:#eef1f6;color:#5d6b7e}
+.empty-list{padding:14px 8px;font-size:11px;color:#8c98a8;line-height:1.5}
+>>>>>>> 9b2ccc84aabf9e2d16bb572b29fdc3057897bd2e

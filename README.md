@@ -1,6 +1,6 @@
 # SafeZone — OpenStreetMap + Leaflet
 
-A front-end emergency and evacuation mapping prototype centered on Davao City. This version uses CARTO Voyager raster tiles (based on OpenStreetMap data) and Leaflet instead of Google Maps, so **no Google Maps API key or Google Cloud billing account is required**.
+A front-end emergency and evacuation mapping prototype centered on Davao City. This version uses OpenStreetMap tiles (with an Esri satellite option) and Leaflet instead of Google Maps, so **no API key or billing account is required**.
 
 ## Features
 - OpenStreetMap interactive map powered by Leaflet
@@ -19,13 +19,26 @@ A front-end emergency and evacuation mapping prototype centered on Davao City. T
 1. Extract the project folder into `C:\laragon\www\`.
 2. Start Laragon.
 3. Open `http://localhost/safezone_leaflet/` (or the folder name you chose).
+<<<<<<< HEAD
 4. Internet access is needed to load Leaflet from its CDN, the CARTO map tiles and the GeoRisk hazard layers.
+=======
+4. Internet access is needed to load Leaflet from its CDN, the map tiles and the GeoRisk hazard layers.
+>>>>>>> 9b2ccc84aabf9e2d16bb572b29fdc3057897bd2e
 5. Allow location permission when using **My location** or **Nearest center**.
 
 You can also use VS Code Live Server. Browser geolocation generally requires HTTPS or localhost.
 
 ## No API key
-There is no `config.js` and no API key placeholder. Leaflet is loaded from unpkg's CDN. Map tiles use CARTO Voyager raster tiles, which are based on OpenStreetMap data. The map includes attribution for both OpenStreetMap contributors and CARTO.
+There is no `config.js` and no API key placeholder. Leaflet is loaded from unpkg's CDN. Street tiles come from OpenStreetMap and satellite tiles from Esri (switch with the layer control at the top right of the map). CARTO's free raster endpoint was removed because it now requires an API key.
+
+## Hazard data (GeoRisk PH / DENR-MGB)
+Configured in `HAZARD_SERVICES` at the top of `scripts.js`:
+- Flood: `https://ulap-hazards.georisk.gov.ph/arcgis/rest/services/MGBPublic/Flood/MapServer` (layer 0, field `fscode`: 01 Low … 04 Very high)
+- Rain-induced landslide: `.../MGBPublic/RainInducedLandslide/MapServer` (layer 0 assumed; if the service layout differs, change `layerId`)
+
+Overlays are drawn with the ArcGIS MapServer `export` operation and points are checked with the layer `query` operation. To add another ArcGIS layer (e.g. storm surge), add an entry to `HAZARD_SERVICES` and a matching `data-layer` checkbox in `index.html`. If the GeoRisk server is offline or blocks the request, the app shows a message and links to HazardHunterPH instead of failing.
+
+These are regional-scale (about 1:50,000) susceptibility maps. "No mapped zone" does **not** mean an area is safe, and they are not for site-specific decisions. Use HazardHunterPH or the relevant agency for official assessments.
 
 ## Hazard data (GeoRisk PH / DENR-MGB)
 Configured in `HAZARD_SERVICES` at the top of `scripts.js`:
@@ -51,7 +64,11 @@ The sample facility markers (evacuation points, hospitals, police/fire) are illu
 - `scripts.js` — map, facility markers, hazard overlays and point check, route lookup, geolocation, and incident storage
 
 ## Technology
+<<<<<<< HEAD
 HTML, CSS, JavaScript, Leaflet 1.9.4, CARTO Voyager tiles (OpenStreetMap data), OSRM demo routing API, DENR-MGB ArcGIS MapServices (GeoRisk PH).
+=======
+HTML, CSS, JavaScript, Leaflet 1.9.4, OpenStreetMap and Esri tiles, OSRM demo routing API, DENR-MGB ArcGIS MapServices (GeoRisk PH).
+>>>>>>> 9b2ccc84aabf9e2d16bb572b29fdc3057897bd2e
 
 
 ## Deploy to Vercel
