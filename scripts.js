@@ -136,10 +136,26 @@ function initMap() {
   }
 
   map = L.map('map', { zoomControl: true, scrollWheelZoom: true }).setView(DAVAO_CENTER, 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>'
+  // CARTO's public raster basemap avoids directly relying on the
+  // community OSM standard tile server. No API key is needed for this prototype.
+  // Respect the provider's fair-use policy and use a dedicated tile service for production.
+  const baseTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
   }).addTo(map);
+
+  let tileErrorShown = false;
+  baseTiles.on('tileerror', () => {
+    if (tileErrorShown) return;
+    tileErrorShown = true;
+    $('#mapStatus').textContent = 'Map tiles could not load. Check your internet connection or tile provider access.';
+    showToast('The map background could not load. Please check your internet connection.');
+  });
+  baseTiles.once('load', () => {
+    tileErrorShown = false;
+    $('#mapStatus').textContent = 'Map loaded · Demonstration locations in Davao City';
+  });
 
   markers = places.map(place => {
     const marker = L.marker(place.position, { icon: makeIcon(place.type), title: place.name }).addTo(map);

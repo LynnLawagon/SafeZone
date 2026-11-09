@@ -1,6 +1,6 @@
 # SafeZone — OpenStreetMap + Leaflet
 
-A front-end emergency and evacuation mapping prototype centered on Davao City. This version uses OpenStreetMap tiles and Leaflet instead of Google Maps, so **no Google Maps API key or Google Cloud billing account is required**.
+A front-end emergency and evacuation mapping prototype centered on Davao City. This version uses CARTO Voyager raster tiles (based on OpenStreetMap data) and Leaflet instead of Google Maps, so **no Google Maps API key or Google Cloud billing account is required**.
 
 ## Features
 - OpenStreetMap interactive map powered by Leaflet
@@ -17,13 +17,13 @@ A front-end emergency and evacuation mapping prototype centered on Davao City. T
 1. Extract the project folder into `C:\laragon\www\`.
 2. Start Laragon.
 3. Open `http://localhost/safezone_leaflet/` (or the folder name you chose).
-4. Internet access is needed to load Leaflet from its CDN and OpenStreetMap map tiles.
+4. Internet access is needed to load Leaflet from its CDN and the CARTO map tiles.
 5. Allow location permission when using **My location** or **Nearest center**.
 
 You can also use VS Code Live Server. Browser geolocation generally requires HTTPS or localhost.
 
 ## No API key
-There is no `config.js` and no API key placeholder. Leaflet is loaded from unpkg's CDN. Map tiles are provided by OpenStreetMap's standard tile service.
+There is no `config.js` and no API key placeholder. Leaflet is loaded from unpkg's CDN. Map tiles use CARTO Voyager raster tiles, which are based on OpenStreetMap data. The map includes attribution for both OpenStreetMap contributors and CARTO.
 
 ## Important service limits
 - OpenStreetMap data is open, but the standard `tile.openstreetmap.org` tile servers are a community service with a usage policy. Keep visible attribution, do not bulk-download tiles, and use a dedicated tile provider for high-traffic or production deployments. See https://operations.osmfoundation.org/policies/tiles/.
@@ -40,4 +40,11 @@ All sample facility markers and amber hazard circles are illustrative demonstrat
 - `scripts.js` — map, layers, markers, route lookup, geolocation, and incident storage
 
 ## Technology
-HTML, CSS, JavaScript, Leaflet 1.9.4, OpenStreetMap tiles, OSRM demo routing API.
+HTML, CSS, JavaScript, Leaflet 1.9.4, CARTO Voyager tiles (OpenStreetMap data), OSRM demo routing API.
+
+
+## Deploy to Vercel
+
+This is a static front-end project. Push the contents of this folder to a GitHub repository, then import that repository in Vercel. Select **Other** as the framework preset and leave Build Command and Output Directory empty/default. Ensure `index.html`, `styles.css`, and `scripts.js` are in the repository root.
+
+Do not open `index.html` by double-clicking it for normal testing. Use VS Code Live Server, Laragon at `http://localhost/...`, or the deployed HTTPS Vercel URL.
