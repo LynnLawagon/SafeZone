@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Example Provincial Hospital",
+    "type": "hospital",
+    "lat": 7.0935,
+    "lng": 125.6137,
+    "address": "Example Street, Example City",
+    "phone": "",
+    "source": "DOH National Health Facility Registry"
+  }
+]

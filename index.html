@@ -24,69 +24,61 @@
 
       <div class="area-card">
         <div class="area-icon"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg></div>
-        <div class="area-copy"><span class="eyebrow">CURRENT COVERAGE</span><strong>Davao City, Philippines</strong><span class="area-sub">Hazards: GeoRisk PH · Facilities: OSM</span></div>
+        <div class="area-copy"><span class="eyebrow">CURRENT COVERAGE</span><strong>Philippines (nationwide)</strong><span class="area-sub">Hazards: MGB, PHIVOLCS · Facilities: OSM</span></div>
         <span class="live-dot" title="Map loaded"></span>
       </div>
 
       <div class="sidebar-section">
-        <div class="section-heading"><span>MAP LAYERS</span><span class="muted-count">08</span></div>
-        <label class="layer-option"><span class="layer-symbol evac-symbol"><svg viewBox="0 0 24 24"><path d="m3 11 9-7 9 7v9H3z"/><path d="M9 20v-6h6v6M12 4v5M9.5 6.5h5"/></svg></span><span class="layer-text"><strong>Evacuation / assembly points</strong><small>OSM assembly points</small></span><input type="checkbox" data-layer="evacuation" checked><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol hospital-symbol"><svg viewBox="0 0 24 24"><path d="M4 21V5h16v16M2 21h20M9 9h6M12 6v6M8 21v-5h8v5"/></svg></span><span class="layer-text"><strong>Hospitals</strong><small>Verified medical facilities</small></span><input type="checkbox" data-layer="hospital" checked><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol police-symbol"><svg viewBox="0 0 24 24"><path d="m12 3 8 3v5c0 5-3.2 8.3-8 10-4.8-1.7-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="layer-text"><strong>Police & fire stations</strong><small>Emergency response units</small></span><input type="checkbox" data-layer="response" checked><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol gym-symbol"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 5v14M2 9h4v6H2zM18 9h4v6h-4zM6 11h12v2H6z"/></svg></span><span class="layer-text"><strong>Gyms & Fitness Centers</strong><small>Community gyms</small></span><input type="checkbox" data-layer="gym" checked><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol school-symbol"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="layer-text"><strong>Schools</strong><small>Educational facilities</small></span><input type="checkbox" data-layer="school" checked><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="M3 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 1.5 1 3 1.5M3 20c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 1.5 1 3 1.5M12 3s5 5.5 5 8.5a5 5 0 0 1-10 0C7 8.5 12 3 12 3Z"/></svg></span><span class="layer-text"><strong>Flood susceptibility</strong><small>DENR-MGB layer</small></span><input type="checkbox" data-layer="flood" checked><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="m2 20 7-13 4 7 3-4 6 10H2Z"/><path d="M12 3v2M17 5l-1 1.5M7 5l1 1.5"/></svg></span><span class="layer-text"><strong>Rain-induced landslide</strong><small>DENR-MGB layer</small></span><input type="checkbox" data-layer="landslide"><i class="toggle"></i></label>
-        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg></span><span class="layer-text"><strong>Earthquake & Volcanic</strong><small>PHIVOLCS active faults</small></span><input type="checkbox" data-layer="earthquake"><i class="toggle"></i></label>
+        <div class="section-heading"><span>MAP LAYERS</span><span class="muted-count">10</span></div>
+        <label class="layer-option"><span class="layer-symbol school-symbol"><svg viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5L2 9Z"/><path d="M6 11.5V17c0 1.5 2.7 3 6 3s6-1.500 6-3v-5.500M22 9v6"/></svg></span><span class="layer-text"><strong>Schools</strong><small>OSM · named records · unverified</small></span><input type="checkbox" data-layer="school" autocomplete="off" checked><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol gym-symbol"><svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg></span><span class="layer-text"><strong>Gyms &amp; sports halls</strong><small>OSM · named records · unverified</small></span><input type="checkbox" data-layer="gym" autocomplete="off" checked><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hospital-symbol"><svg viewBox="0 0 24 24"><path d="M4 21V5h16v16M2 21h20M9 9h6M12 6v6M8 21v-5h8v5"/></svg></span><span class="layer-text"><strong>Hospitals</strong><small>OSM · named records · unverified</small></span><input type="checkbox" data-layer="hospital" autocomplete="off" checked><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol police-symbol"><svg viewBox="0 0 24 24"><path d="m12 3 8 3v5c0 5-3.2 8.3-8 10-4.8-1.7-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="layer-text"><strong>Police & fire stations</strong><small>OSM · named records · unverified</small></span><input type="checkbox" data-layer="response" autocomplete="off" checked><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="M3 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 1.5 1 3 1.5M3 20c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 1.5 1 3 1.5M12 3s5 5.5 5 8.5a5 5 0 0 1-10 0C7 8.5 12 3 12 3Z"/></svg></span><span class="layer-text"><strong>Flood susceptibility</strong><small>DENR-MGB · GeoRisk PH</small></span><input type="checkbox" data-layer="flood" autocomplete="off" checked><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="m2 20 7-13 4 7 3-4 6 10H2Z"/><path d="M12 3v2M17 5l-1 1.5M7 5l1 1.5"/></svg></span><span class="layer-text"><strong>Rain-induced landslide</strong><small>DENR-MGB · GeoRisk PH</small></span><input type="checkbox" data-layer="landslide" autocomplete="off"><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="M3 20 9 8h6l6 12H3Z"/><path d="M10 8 9 5M14 8l1-3M12 8V4"/></svg></span><span class="layer-text"><strong>Volcano hazards (lahar)</strong><small>PHIVOLCS</small></span><input type="checkbox" data-layer="volcano" autocomplete="off"><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="M2 16c3 0 3-2 6-2s3 2 6 2 3-2 6-2M2 20c3 0 3-2 6-2s3 2 6 2 3-2 6-2M4 12c0-5 4-8 9-8-2 2-2 4 0 6"/></svg></span><span class="layer-text"><strong>Tsunami hazard</strong><small>PHIVOLCS · GeoRisk PH</small></span><input type="checkbox" data-layer="tsunami" autocomplete="off"><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 14h16M7 19l2-5M13 19l2-5M9 9l2-5"/></svg></span><span class="layer-text"><strong>Liquefaction susceptibility</strong><small>PHIVOLCS · GeoRisk PH</small></span><input type="checkbox" data-layer="liquefaction" autocomplete="off"><i class="toggle"></i></label>
+        <label class="layer-option"><span class="layer-symbol hazard-symbol"><svg viewBox="0 0 24 24"><path d="m4 4 5 6-3 4 6 3-2 4M15 4l3 3-2 3 4 3"/></svg></span><span class="layer-text"><strong>Active faults</strong><small>PHIVOLCS · GeoRisk PH</small></span><input type="checkbox" data-layer="activefault" autocomplete="off"><i class="toggle"></i></label>
         <div class="hazard-legend" id="hazardLegend" hidden></div>
+        <label class="quality-filter"><input type="checkbox" id="qualityOnly" autocomplete="off"><span><strong>Well-documented records only</strong><small>Hides facilities with sparse map details. Still not an official verification.</small></span></label>
       </div>
 
       <div class="sidebar-section locations-section">
-        <div class="section-heading"><span id="locationHeading">VERIFIED FACILITIES IN VIEW</span><button class="text-button" id="showAll">View all</button></div>
+        <div class="section-heading"><span id="locationHeading">FACILITIES IN VIEW</span><button class="text-button" id="showAll">View all</button></div>
         <div class="location-list" id="locationList"></div>
       </div>
 
       <div class="sidebar-bottom">
-        <div class="notice-card"><div class="notice-icon">!</div><div><strong>Emergency reminder</strong><p>In immediate danger, call 911 or your local emergency hotline.</p></div></div>
-        <div class="sidebar-footer"><span>SAFEZONE <b>•</b> PROTOTYPE</span><span>v1.2.0</span></div>
+        <div class="notice-card"><div class="notice-icon">!</div><div><strong>Emergency reminder</strong><p>In immediate danger, call 911 or your local emergency hotline. Facility data is community-mapped (OpenStreetMap) and not officially verified; confirm evacuation centers with your LGU / DRRMO.</p></div></div>
+        <div class="sidebar-footer"><span>SAFEZONE <b>•</b> PROTOTYPE</span><span>v1.4.0</span></div>
       </div>
     </aside>
 
     <main class="main-area">
       <header class="topbar">
         <div class="topbar-left"><button class="icon-button menu-button" id="openSidebar" aria-label="Open menu">☰</button><div><div class="page-kicker">EMERGENCY MANAGEMENT</div><h1>Safety overview</h1></div></div>
-        <div class="topbar-actions"><div class="status-pill"><span class="status-dot"></span> Map ready</div><button class="report-button" id="openReport"><span>＋</span> Report incident</button><div class="avatar">SZ</div></div>
+        <div class="topbar-actions"><div class="status-pill"><span class="status-dot"></span> <span id="serviceStatus">Map services ready</span></div><div class="avatar">SZ</div></div>
       </header>
 
       <section class="stats-grid" aria-label="Map statistics">
-        <article class="stat-card"><div class="stat-top"><span>Evacuation points</span><span class="stat-icon stat-green">⌂</span></div><div class="stat-number" id="evacCount">00</div><div class="stat-foot"><span class="tiny-dot green-dot"></span> Assembly points in view</div></article>
-        <article class="stat-card"><div class="stat-top"><span>Medical facilities</span><span class="stat-icon stat-red">＋</span></div><div class="stat-number" id="hospitalCount">00</div><div class="stat-foot"><span class="tiny-dot red-dot"></span> Hospitals in view</div></article>
-        <article class="stat-card"><div class="stat-top"><span>Response stations</span><span class="stat-icon stat-blue">✚</span></div><div class="stat-number" id="responseCount">00</div><div class="stat-foot"><span class="tiny-dot blue-dot"></span> Police & fire in view</div></article>
-        <article class="stat-card"><div class="stat-top"><span>Reported incidents</span><span class="stat-icon stat-amber">⚑</span></div><div class="stat-number" id="incidentCount">00</div><div class="stat-foot"><span class="tiny-dot amber-dot"></span> Saved locally</div></article>
+        <article class="stat-card"><div class="stat-top"><span>Hospitals</span><span class="stat-icon stat-red">＋</span></div><div class="stat-number" id="hospitalCount">00</div><div class="stat-foot"><span class="tiny-dot red-dot"></span> In current view</div></article>
+        <article class="stat-card"><div class="stat-top"><span>Police &amp; fire</span><span class="stat-icon stat-blue">✚</span></div><div class="stat-number" id="responseCount">00</div><div class="stat-foot"><span class="tiny-dot blue-dot"></span> In current view</div></article>
+        <article class="stat-card"><div class="stat-top"><span>Schools</span><span class="stat-icon stat-amber">✎</span></div><div class="stat-number" id="schoolCount">00</div><div class="stat-foot"><span class="tiny-dot amber-dot"></span> In current view</div></article>
+        <article class="stat-card"><div class="stat-top"><span>Gyms &amp; sports halls</span><span class="stat-icon stat-teal">◆</span></div><div class="stat-number" id="gymCount">00</div><div class="stat-foot"><span class="tiny-dot teal-dot"></span> In current view</div></article>
       </section>
 
       <section class="map-panel">
-        <div class="map-toolbar"><div class="map-title"><div class="map-title-icon"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg></div><div><h2>Live safety map</h2><p>Click any location or facility for coordinates &amp; hazard check</p></div></div>
-          <div class="map-tools"><div class="search-wrap"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="mapSearch" type="search" placeholder="Search places in PH…" autocomplete="off"><kbd>/</kbd></div><button class="map-tool-button" id="locateMe" title="Find my location"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>My location</span></button></div>
+        <div class="map-toolbar"><div class="map-title"><div class="map-title-icon"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg></div><div><h2>Live safety map</h2><p>Click anywhere to check flood, landslide, volcano, tsunami &amp; more</p></div></div>
+          <div class="map-tools"><div class="search-wrap"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="mapSearch" type="search" placeholder="Search any place in the Philippines…" autocomplete="off"><kbd>/</kbd></div><button class="map-tool-button" id="findNearest" title="Find the nearest school or gym (possible shelter)"><span>⌖</span><span>Nearest shelter</span></button><button class="map-tool-button" id="locateMe" title="Find my location"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>My location</span></button></div>
         </div>
-        <div class="map-wrap">
-          <div id="map"></div>
-          <!-- Persistent Blocking Loading Screen -->
-          <div class="map-loading">
-            <div class="loader"></div>
-            <strong id="loadingText">Preparing safety map &amp; loading facilities...</strong>
-            <span>Please wait while OpenStreetMap data streams</span>
-          </div>
-          <div class="map-legend"><span><i class="legend-dot legend-evac"></i> Evac</span><span><i class="legend-dot legend-hospital"></i> Medical</span><span><i class="legend-dot legend-response"></i> Response</span></div>
-          <div class="map-attribution">MAP © OSM · HAZARDS © DENR-MGB / PHIVOLCS</div>
-        </div>
-        <div class="map-footer"><div class="map-footer-left"><span class="footer-pin">⌖</span><span id="mapStatus">Click any map location or facility for coordinates &amp; hazard info</span></div><button class="reset-button" id="resetMap">Reset Davao View ↗</button></div>
+        <div class="map-wrap"><div id="map"><div class="map-loading"><div class="loader"></div><strong>Preparing your safety map</strong><span>Loading map tiles…</span></div></div><div class="map-legend"><span><i class="legend-dot legend-hospital"></i> Hospital</span><span><i class="legend-dot legend-response"></i> Police / fire</span><span><i class="legend-dot legend-school"></i> School</span><span><i class="legend-dot legend-gym"></i> Gym</span></div><div class="map-attribution">MAP & FACILITIES © OSM · HAZARDS © DENR-MGB, PHIVOLCS / GEORISK PH</div></div>
+        <div class="map-footer"><div class="map-footer-left"><span class="footer-pin">⌖</span><span id="mapStatus">Click the map to check hazards</span></div><button class="reset-button" id="resetMap">Reset map view ↗</button></div>
       </section>
-      <footer class="main-footer"><span>© 2026 SafeZone · Community safety mapping prototype</span><span>Hazard data from <a href="https://hazardhunter.georisk.gov.ph/map" target="_blank" rel="noopener">HazardHunterPH</a></span></footer>
+      <footer class="main-footer"><span>© 2026 SafeZone · Community safety mapping prototype</span><span>Not an official emergency alert service · Hazard data from <a href="https://hazardhunter.georisk.gov.ph/map" target="_blank" rel="noopener">HazardHunterPH</a></span></footer>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="reportModal" aria-hidden="true"><section class="report-modal" role="dialog" aria-modal="true" aria-labelledby="reportTitle"><div class="modal-header"><div><span class="modal-kicker">COMMUNITY ALERT</span><h2 id="reportTitle">Report an incident</h2></div><button class="icon-button" id="closeReport" aria-label="Close">×</button></div><form id="incidentForm"><label class="form-label">Incident type<select id="incidentType" required><option value="Flooding">Flooding</option><option value="Road blockage">Road blockage</option><option value="Fire">Fire</option><option value="Landslide">Landslide</option><option value="Other">Other</option></select></label><label class="form-label">Location or landmark<input id="incidentLocation" type="text" placeholder="e.g. Near Bajada" required maxlength="100"></label><label class="form-label">Description<textarea id="incidentDescription" rows="3" placeholder="Describe the incident..." maxlength="500" required></textarea></label><div class="modal-actions"><button type="button" class="cancel-button" id="cancelReport">Cancel</button><button type="submit" class="submit-button">Save report</button></div></form></section></div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -1,0 +1,3 @@
+name,type,lat,lng,address,phone,source
+"Example Provincial Hospital",hospital,7.0935,125.6137,"Example Street, Example City",,DOH NHFR
+Example National High School,school,7.0700,125.6100,,,DepEd
